@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en-US">
+
+
+<head>
+	<title>Number Crunchers</title>
+	<link rel="shortcut icon" href="https://raw.githubusercontent.com/DevelopingMindsLab/NumberCrunchers/master/Images/favicon.ico">
+	<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/emailjs-com@2.3.2/dist/email.min.js"></script>
+	<script type="text/javascript">
+   		(function(){
+      	emailjs.init("user_Z7PiBkhSmp8iOvli1yoDe");
+   		})();
+	</script>
+</head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+
+<script>
+
+var isPlaying = false;
+var skip_demo = false;
+var part = [];
+var num_width = 60;
+var head_width = 240;
+var head_top = 450;
+var head_height = (840/812)*head_height;
+var fix_width = num_width/3;
+var num_height = 2*(5*num_width/6) + num_width/6;
+var offset = 3*(5*num_width/6);
+var num_top = 300;
+var example_part = 1;
+var block = 1;
+var pre_mask_time = 750;
+var pre_cue_time = 750;
+var main_grid_time = 250;
+var post_mask_time = 100;
+var number_opts = [2, 3, 4, 5, 6, 7, 9];
+var nTrials = [];
+var nTrials_main = 20; //amount NOT counting single cue
+var nTrials_singleCue = 12;
+var nTrials_practice = 8;
+var trial_count = 0;
+var total_trial_count = 0;
+var ready_for_resp = false;
+var ready_for_next_trial = false;
+var resp_made = false;
+var block_break = false;
+var resp_start = [];
+var demo = true;
+var demographics = true;
+var template_params = [];
+var pageURL = window.location.href;
+var part_id = pageURL.substring(pageURL.indexOf("?")+1, pageURL.length);
+var did_end = false;
+var acc = [];
+var audio_count = 2;
+var arrow_size = 80;
+var D = {"practice_main": [],
+		"pre_cue_type": [],
+		"valid_invalid": [],
+		"left_right": [],
+		"acc": [],
+		"RT": [],
+		"correct_answer": [],
+		"resp": [],
+		"nums_main": [],
+		"num_targs": [],
+		"nums_loc": [],
+		"cue_col": [],
+		"cue_type": [],
+		"inside_out": [],
+		"monster_number": [],
+		"online": 1,
+		"main_grid_time": main_grid_time,
+		"num_opts": number_opts,
+		"part_id": part_id,
+		"start_time": new Date(),
+		"userAgent": navigator.userAgent, //browser and version
+    	"windowWidth": $(window).width(), //size of window HIT was completed in
+    	"windowHeight": $(window).height(),
+    	"screenWidth": screen.width,
+    	"screenHeight": screen.height,   
+	};
+var trial_info = {"pre_cue_type": [],
+		"valid_invalid": [],
+		"left_right": [],
+		"inside_out": [],
+		"cue_type": [],
+		"num_targs": [],
+		"nums_loc": [],
+		"cue_col": [],
+		"correct_answer": []
+	}
+
+
+$(document).ready(function() {
+	$('#demographics').hide();
+	$('#fixation').css('margin-left', -fix_width/2);
+	$('#fixation').css('height', fix_width);
+	$('#fixation').css('width', fix_width);
+	$('#arrow').css('height', arrow_size);
+	$('#arrow').css('width', arrow_size);
+	$('#arrow').css('margin-left', -arrow_size/2);
+	$('#arrow').css('top', num_top + 100);
+	$('#arrow').hide();
+	$('#ar').css('height', arrow_size);
+	$('#ar').css('width', arrow_size);
+	$('#arrow2').css('height', arrow_size);
+	$('#arrow2').css('width', arrow_size);
+	$('#arrow2').css('margin-left', -arrow_size/2);
+	$('#arrow2').css('top', num_top + 100);
+	$('#arrow2').hide();
+	$('#ar2').css('height', arrow_size);
+	$('#ar2').css('width', arrow_size);
+	$('#fixation').css('top', num_top + num_height/2 - fix_width/2);
+	$('#fixation').css('display', 'none');
+	$('.number').css('width', num_width);
+	$('.number').css('height', num_height);
+	for (var n=1; n<=6; n++){
+		$('#nc'+n).css('display', 'none');
+		$('#nc'+n).css('position', 'fixed');
+		$('#nc'+n).css('width', num_width);
+		$('#nc'+n).css('height', num_height);
+		$('#nc'+n).css('top', num_top);
+		$('#nc'+n).css('left', '50%');
+		var xpos = 0 - (5*offset/2) - num_width/2 + offset*(n-1);
+		$('#nc'+n).css('margin-left', xpos);
+	}
+	for (var rn=1; rn<=2; rn++){
+		$('#rn'+rn).css('display', 'none');
+		$('#rn'+rn).hide();
+		$('#rn'+rn).css('position', 'fixed');
+		$('#rn'+rn).css('width', num_width);
+		$('#rn'+rn).css('height', num_height);
+		$('#rn'+rn).css('top', num_top + 150);
+		$('#rn'+rn).css('left', '50%');
+		
+		
+		$('#head'+rn).css('display', 'none');
+		$('#head'+rn).hide();
+		$('#head'+rn).css('position', 'fixed');
+		$('#head'+rn).css('width', head_width);
+		$('#head'+rn).css('margin-left', -head_width/2);
+		$('#head'+rn).css('height', head_height);
+		$('#head'+rn).css('top', head_top);
+		$('#head'+rn).css('left', '50%');
+		
+	}
+	$('#main_text').hide();
+	$('#m1').hide();
+	$('#m2').hide();
+	$('#m3').hide();
+	$('#rn'+rn).css('display', 'none');
+	
+	for (q = 1; q <= 2; q++){
+		$('#q' + q).hide();
+		$('#q' + q).css('position', 'fixed');
+		$('#q' + q).css('width', num_width);
+		$('#q' + q).css('height', num_height);
+		$('#q' + q).css('top', num_top + 150);
+		$('#q' + q).css('left', '50%');
+	}
+	
+	if (!skip_demo){
+		part = -2;
+	} else {
+		part = 3;
+		ReadyToBegin();
+		SetupPractice();
+		ready_for_next_trial = true;
+	}
+});
+
+function Run_Experiment(){
+
+	if (part == -2){
+		$('#consent').hide();
+		$('#demographics').show();
+		part++
+	} else if (part == -1){
+		if (demographics){
+			return
+		}
+
+		$('body').css('cursor', 'none');
+		$('#mouse_hider').show();
+		aud = new Audio('AudioFiles/NC1.mp3');
+		aud.play();
+		aud.onended = Run_Experiment;
+		
+		$('#demographics').hide();
+		$('#main_text').show();
+		$('#m1').show();
+		$('#m2').show();
+		$('#m3').show();
+		part++;
+	} else if (part == 0){ //welcome screen, start first example (one location cued at end)
+		$('#main_text').hide();
+		$('#m1').hide();
+		$('#m2').hide();
+		$('#m3').hide();
+		DoExample(1);
+	} else if (part == 1){ //example 2 (two locations cued at end)
+		DoExample(2);
+	} else if (part == 2){ //show practice screen
+		$('#main_display').hide();
+		$('#main_text').html("Let's Practice!");
+		$('#main_text').show();
+		$('#m1').css('margin-left', '-125px');
+		$('#m1').show();
+		$('#m2').hide();
+		$('#m3').hide();
+		aud.src = 'AudioFiles/NC' + audio_count + '.mp3';
+		aud.onended = ReadyToBegin;
+		audio_count++;
+		aud.play();
+		SetupPractice();
+		ready_for_next_trial = true;
+		//calculate practice trial parameters
+		part++;
+	} else if (part == 3){ //do practice trials
+		block = 1;
+		nTrials = nTrials_practice;
+		RunTrial(block); //block 1 for practice
+	} else if (part == 4) { //main experiment trials
+		nTrials = nTrials_main + nTrials_singleCue;
+		RunTrial(block);
+	} else if (part == 5){
+		RunEnd();
+	}
+}
+
+function ReadyToBegin(){
+	$(document).on('keyup',function(e) {
+		if (e.which == 32 || e.code == 32){
+			Run_Experiment();
+		} else if (e.key >= 0 && e.key <= 9){
+			n = e.key;
+			KeyPress(n);
+		} else if (e.which - 48 >= 0 && e.which - 48 <= 9){
+			n = e.which;
+			KeyPress(n);
+		} else if (e.code - 48 >= 0 && e.code - 48 <= 9){
+			n = e.code;
+			KeyPress(n);
+		}
+	});
+	$('#main_text').html("Let's Practice!" + "<br>" + "Press spacebar to begin.");
+}
+
+function DoExample(ex){
+	if (ex == 2 && example_part == 4){
+		setTimeout(function() {
+			Run_Experiment();
+		}, post_mask_time);
+	} else {
+		aud.src = 'AudioFiles/NC' + audio_count + '.mp3';
+		audio_count++;
+	}
+	aud.play();
+	if (example_part == 1){
+		$('#fixation').show();
+		$('#rn1').hide();
+		ShowMasks();
+		if (ex == 1){
+			setTimeout(function() {
+				$('#arrow').show();
+			}, 5000);
+			setTimeout(function() {
+				$('#head2').show();
+			}, 10000);
+		} else {
+			$('#arrow').css('margin-left', -arrow_size/2);
+			$('#arrow').css('top', num_top + 100);
+			setTimeout(function() {
+				$('#arrow').show();
+			}, 8000);
+			setTimeout(function() {
+				$('#head2').show();
+			}, 10000);
+		}
+		example_part++;
+	} else if (example_part == 2){
+		$('#arrow').hide();
+		$('#head2').hide();
+		if (ex == 1){
+			ShowPreCue([2,4]);
+		} else if (ex==2){
+			ShowPreCue([3]);
+		}
+		
+		example_part++;
+	} else if (example_part == 3){
+		if (ex == 1){
+			ShowNumbers([2,7], [2,4]);
+			
+			setTimeout(function() {
+				var xpos = 0 - (5*offset/2) - arrow_size/2 + offset*(2-1);
+				$('#arrow').css('margin-left', xpos);
+				$('#arrow').css('top', num_top + 150);
+				$('#arrow').show();
+				var xpos = 0 - (5*offset/2) - arrow_size/2 + offset*(4-1);
+				$('#arrow2').css('top', num_top + 150);
+				$('#arrow2').css('margin-left', xpos);
+				$('#arrow2').show();
+			}, 2000);
+			
+		} else if (ex == 2){//correct answer = 5
+			ShowNumbers([5], [3]);
+			
+			setTimeout(function() {
+				var xpos = 0 - (5*offset/2) - arrow_size/2 + offset*(3-1);
+				$('#arrow').css('margin-left', xpos);
+				$('#arrow').css('top', num_top + 150);
+				$('#arrow').show();
+			}, 1000);
+		}
+		example_part++;
+	} else if (example_part == 4){
+		$('#arrow').hide();
+		$('#arrow2').hide();
+		ShowMasks();
+		example_part++;
+	} else if (example_part == 5){
+		if (ex == 1){
+			ShowPostCue([2]);
+			setTimeout(function() {
+				var xpos = 0 - (5*offset/2) - num_width/2 + offset*(2-1);
+				$('#rn1').css('margin-left', xpos);
+				$('#r1').attr("src", "Images/Number_" + 2 + ".png");
+				$('#rn1').show();
+				$('#q1').hide();
+			}, 14000);
+		} else if (ex == 2){
+			ShowPostCue([3]);
+			$('#q1').hide();
+			
+			setTimeout(function() {
+				$('#q1').show();
+			}, 3000);
+			
+			setTimeout(function() {
+				$('#q1').hide();
+				//$('#q2').show();
+				var xpos = 0 - (5*offset/2) - num_width/2 + offset*(3-1);
+				$('#rn1').css('margin-left', xpos);
+				$('#r1').attr("src", "Images/Number_" + 5 + ".png");
+				$('#rn1').show();
+			}, 8000);
+
+		}
+		example_part = 1;
+		part++;
+		if (ex == 2){
+			demo = false;
+		}
+	}
+}
+
+function ShowNumbers(nums, num_locs){
+	for (n=1; n<=6; n++){
+		if (num_locs.indexOf(n) == -1){
+			var distractor = getRandomInt(11, 20);
+			$('#n'+n).attr("src", "Images/Number_" + distractor + ".png");
+			if (!demo){
+				D.nums_main[total_trial_count].push(distractor);
+			}
+		} else {
+			$('#n'+n).attr("src", "Images/Number_" + nums[num_locs.indexOf(n)] + ".png");
+			if (!demo){
+				D.nums_main[total_trial_count].push(n);
+			}
+		}
+	}
+}
+
+function ShowMasks(){
+	for (var n=1; n<=6; n++){
+		$('#nc'+n).show();
+		$('#n'+n).attr("src", "Images/Number_8.png");
+	}
+}
+
+function ShowPreCue(wn){
+	console.log(wn);
+	for (var n=0; n<wn.length; n++){
+		$('#n'+wn[n]).attr("src", "Images/RedCue.png");
+	}
+}
+
+function ShowPostCue(locs){
+	for (var n=0; n<locs.length; n++){
+		$('#n'+locs[n]).attr("src", "Images/GreenCue.png");
+	}
+	cn = locs[0];
+	var xpos = 0 - (5*offset/2) - num_width/2 + offset*(cn-1);
+	$('#q1').css('margin-left', xpos);
+	$('#q1').show();
+	resp_start = new Date();
+}
+
+function SetupPractice(){
+	resetTrialInfo();
+	trial_count = 0;
+	
+	practice_cue_type = [];
+	practice_cue_type = randperm(2);
+	
+	trial_info.valid_invalid = [1,1,1,2,1,2,1,1];
+	trial_info.cue_type = [2, 1, 2, 2, 2, 2, 1, 2];
+	
+	for (t = 0; t < nTrials_practice; t++){
+		trial_info.pre_cue_type.push(getRandomInt(1, 2));
+		trial_info.left_right.push(getRandomInt(1, 2));
+		trial_info.num_targs.push([]);
+		trial_info.num_targs[t][0] = number_opts[getRandomInt(0, number_opts.length-1)];
+		
+		if (trial_info.cue_type[t] == 2){
+			both = false
+			while (!both){
+				trial_info.num_targs[t][1] = number_opts[getRandomInt(0, number_opts.length-1)]
+				if (trial_info.num_targs[t][0] != trial_info.num_targs[t][1]){
+					both = true;
+				}
+			}
+		}
+	}
+	
+	trial_info.pre_cue_type[3] = practice_cue_type[0];
+	trial_info.pre_cue_type[5] = practice_cue_type[1];
+	trial_info.pre_cue_type[1] = practice_cue_type[1];
+	trial_info.pre_cue_type[6] = practice_cue_type[0];
+	
+	practice_cue_left_right = getRandomInt(1,2);
+	trial_info.left_right[3] = practice_cue_left_right;
+	trial_info.left_right[5] = practice_cue_left_right;
+	
+	for (t = 0; t < nTrials_practice; t++){
+		
+		trial_info.nums_loc.push([]);
+		trial_info.cue_col.push([]);
+		
+		if (trial_info.pre_cue_type[t] == 1){
+			if (trial_info.valid_invalid[t] == 1){
+				opts = [2,4];
+				if (trial_info.cue_type[t] == 1){
+					trial_info.nums_loc[t].push(opts[trial_info.left_right[t]-1]);
+				} else if (trial_info.cue_type[t] == 2){
+					trial_info.nums_loc[t] = opts;
+				}
+				trial_info.inside_out[t] = 0;
+			} else if (trial_info.valid_invalid[t] == 2){
+				trial_info.nums_loc[t] = [3,5];
+				if (trial_info.left_right[t] == 1){
+					trial_info.inside_out[t] = 1;
+				} else if (trial_info.left_right[t] == 2){
+					trial_info.inside_out[t] = 2;
+				}
+			}
+		} else if (trial_info.pre_cue_type[t] == 2) {
+			if (trial_info.valid_invalid[t] == 1){
+				opts = [3,5];
+				if (trial_info.cue_type[t] == 1){
+					trial_info.nums_loc[t].push(opts[trial_info.left_right[t]-1]);
+				} else if (trial_info.cue_type[t] == 2){
+					trial_info.nums_loc[t] = opts;
+				}
+				trial_info.inside_out[t] = 0;
+			} else if (trial_info.valid_invalid[t] == 2){
+				trial_info.nums_loc[t] = [2,4];
+				if (trial_info.left_right[t] == 1){
+					trial_info.inside_out[t] = 2;
+				} else if (trial_info.left_right[t] == 2){
+					trial_info.inside_out[t] = 1;
+				}
+			}
+		}
+		
+		if (trial_info.cue_type[t] == 2){
+			trial_info.cue_col[t].push(trial_info.nums_loc[t][trial_info.left_right[t]-1]);
+			trial_info.correct_answer[t] = trial_info.num_targs[t][trial_info.left_right[t]-1];
+		}  else if (trial_info.cue_type[t] == 1){
+			trial_info.cue_col[t] = trial_info.nums_loc[t];
+			trial_info.correct_answer[t] = Number(trial_info.num_targs[t]);
+		}
+	} 
+	
+}
+
+function SetupMain(){
+	resetTrialInfo();
+	trial_count = 0;
+	
+    //set up 2-cue trials
+    for (t = 1; t <= nTrials_main; t++){
+    	//pre_cue_type is split first half vs second half
+    	if (t <= nTrials_main/2){
+    		trial_info.pre_cue_type.push(1);
+    	} else {
+    		trial_info.pre_cue_type.push(2);
+    	}
+    	
+    	//left right switches every 5
+    	if (t <= nTrials_main/4 || (t > nTrials_main/2 && t <= 3*nTrials_main/4 )){
+    		trial_info.left_right.push(1);
+    	} else {
+    		trial_info.left_right.push(2);
+    	}
+    	
+    	//valid invalid follows pattern VVVVI,VVVVI (multiples of 5 are invalid)
+    	if (t%5 == 0){
+    		trial_info.valid_invalid.push(2);
+    	} else {
+    		trial_info.valid_invalid.push(1);
+    	}
+    	
+    	//cue type is 2 for these
+    	trial_info.cue_type.push(2);    	
+    }
+    
+    //set up 1-cue trials
+    for (t = 1; t <= nTrials_singleCue; t++){
+    	//pre_cue_type is split first half vs second half
+    	if (t <= nTrials_singleCue/2){
+    		trial_info.pre_cue_type.push(1);
+    	} else {
+    		trial_info.pre_cue_type.push(2);
+    	}
+    	
+    	//left right switches every 3
+    	if (t <= nTrials_singleCue/4 || (t > nTrials_singleCue/2 && t <= 3*nTrials_singleCue/4 )){
+    		trial_info.left_right.push(1);
+    	} else {
+    		trial_info.left_right.push(2);
+    	}
+    	
+    	//always valid
+    	trial_info.valid_invalid.push(1);
+    	
+    	//cue type is 1 for these
+    	trial_info.cue_type.push(1);    	
+    }
+    	
+    	
+    //picking target numbers, can wait for this until both trial types set	
+	for (t = 0; t < nTrials; t++){
+		trial_info.num_targs.push([]);
+		trial_info.num_targs[t][0] = number_opts[getRandomInt(0, number_opts.length-1)]
+		
+		if (trial_info.cue_type[t] == 2){
+			both = false
+			while (!both){
+				trial_info.num_targs[t][1] = number_opts[getRandomInt(0, number_opts.length-1)]
+				if (trial_info.num_targs[t][0] != trial_info.num_targs[t][1]){
+					both = true;
+				}
+			}
+		}
+		
+		trial_info.nums_loc.push([]);
+		trial_info.cue_col.push([]);
+		if (trial_info.pre_cue_type[t] == 1){
+			if (trial_info.valid_invalid[t] == 1){
+				opts = [2,4];
+				if (trial_info.cue_type[t] == 1){
+					trial_info.nums_loc[t].push(opts[trial_info.left_right[t]-1]);
+				} else if (trial_info.cue_type[t] == 2){
+					trial_info.nums_loc[t] = opts;
+				}
+				trial_info.inside_out[t] = 0;
+			} else if (trial_info.valid_invalid[t] == 2){
+				trial_info.nums_loc[t] = [3,5];
+				if (trial_info.left_right[t] == 1){
+					trial_info.inside_out[t] = 1;
+				} else if (trial_info.left_right[t] == 2){
+					trial_info.inside_out[t] = 2;
+				}
+			}
+		} else if (trial_info.pre_cue_type[t] == 2) {
+			if (trial_info.valid_invalid[t] == 1){
+				opts = [3,5];
+				if (trial_info.cue_type[t] == 1){
+					trial_info.nums_loc[t].push(opts[trial_info.left_right[t]-1]);
+				} else if (trial_info.cue_type[t] == 2){
+					trial_info.nums_loc[t] = opts;
+				}
+				trial_info.inside_out[t] = 0;
+			} else if (trial_info.valid_invalid[t] == 2){
+				trial_info.nums_loc[t] = [2,4];
+				if (trial_info.left_right[t] == 1){
+					trial_info.inside_out[t] = 2;
+				} else if (trial_info.left_right[t] == 2){
+					trial_info.inside_out[t] = 1;
+				}
+			}
+		}
+		
+		if (trial_info.cue_type[t] == 2){
+			trial_info.cue_col[t].push(trial_info.nums_loc[t][trial_info.left_right[t]-1]);
+			trial_info.correct_answer[t] = trial_info.num_targs[t][trial_info.left_right[t]-1];
+		}  else if (trial_info.cue_type[t] == 1){
+			trial_info.cue_col[t] = trial_info.nums_loc[t];
+			trial_info.correct_answer[t] = Number(trial_info.num_targs[t]);
+		}
+	}
+	
+	//now need to shuffle everything
+	var shuffle_array = [];
+	for (var i = 0; i < nTrials; i++){
+		shuffle_array.push(i);
+	}
+	shuffle_array = shuffle(shuffle_array);
+	trial_info_copy = [];
+	for (var prop in trial_info) {
+    	if (Object.prototype.hasOwnProperty.call(trial_info, prop)) {
+        	//do stuff
+        	trial_info_copy[prop] = [];
+        	for (t = 0; t < nTrials; t++){
+        		trial_info_copy[prop].push(trial_info[prop][shuffle_array[t]]);
+        	}
+    	}
+	}
+	trial_info = [];
+	trial_info = trial_info_copy;
+}
+
+function RunTrial(block){
+
+	if (!ready_for_next_trial){
+		return;
+	}
+	
+	if (block_break){
+		$('#fb_mon').attr('src', 'Images/nm' + block + '_happy.png');
+		$('#feedback_monster').show();	
+		$('#feedback_monster').css('top', 300);
+		$('#main_text').css('top', '150px');
+		$('#main_text').html("Time to feed this number cruncher!");
+		$('#main_text').show();
+		
+		if (block == 2){
+			ready_for_next_trial = false;
+			aud.src = 'AudioFiles/NC' + audio_count + '.mp3';
+			aud.onended = function(){ready_for_next_trial = true;};;
+			audio_count++;
+			aud.play();
+		}
+		
+		block_break = false;
+		return;
+	}
+	
+	//make sure this trial finished before next one begins
+	ready_for_next_trial = false;
+	
+	//log trial-specific parameters
+	if (block == 1){
+		D.practice_main[total_trial_count] = 1;
+	} else if (block >= 2) {
+		D.practice_main[total_trial_count] = 2;
+	}
+	D.pre_cue_type[total_trial_count] = trial_info.pre_cue_type[trial_count];
+	D.num_targs[total_trial_count] = trial_info.num_targs[trial_count];
+	D.nums_loc[total_trial_count] = trial_info.nums_loc[trial_count];
+	D.cue_col[total_trial_count] = trial_info.cue_col[trial_count];
+	D.left_right[total_trial_count] = trial_info.left_right[trial_count];
+	D.cue_type[total_trial_count] = trial_info.cue_type[trial_count];
+	D.valid_invalid[total_trial_count] = trial_info.valid_invalid[trial_count];
+	D.correct_answer[total_trial_count] = trial_info.correct_answer[trial_count];
+	D.inside_out[total_trial_count] = trial_info.inside_out[trial_count];
+	D.nums_main[total_trial_count] = [];
+	D.monster_number[total_trial_count] = block;
+		
+	//show/hide relevant divs
+	$('#main_display').show();
+	$('#fixation').show();
+	$('#main_text').hide();
+	$('#m' + block).hide();
+	$('#rn1').hide();
+	$('#rn2').hide();
+	$('#q1').hide();
+	$('#feedback_monster').hide();	
+		
+	//pre masks
+	ShowMasks();
+		
+	//pre cue
+	setTimeout(function() {
+		ShowPreCue(trial_info.nums_loc[trial_count]);
+	}, pre_mask_time);
+	
+	//numbers
+	setTimeout(function() {
+		ShowNumbers(trial_info.num_targs[trial_count], trial_info.nums_loc[trial_count]);
+	}, pre_mask_time + pre_cue_time);
+	
+	//post mask
+	setTimeout(function() {
+		ShowMasks();
+	}, pre_mask_time + pre_cue_time + main_grid_time);
+	
+	//post cue
+	setTimeout(function() {
+		ShowPostCue(trial_info.cue_col[trial_count])
+		D.resp[total_trial_count] = [];
+		resp_made = false;
+		ready_for_resp = true;
+	}, pre_mask_time + pre_cue_time + main_grid_time + post_mask_time);
+	
+}
+
+function KeyPress(n){
+	if (!ready_for_resp){
+		return;
+	}
+	
+	D.resp[total_trial_count].push(Number(n));
+	if (n==0){
+		n=10;
+	}
+	resp_made = true;
+	if (n == trial_info.correct_answer[trial_count]){
+		acc = 1;
+	} else {
+		acc = 0;
+	}
+	cn = trial_info.cue_col[trial_count];
+	var xpos = 0 - (5*offset/2) - num_width/2 + offset*(cn-1);
+	$('#rn1').css('margin-left', xpos);
+	$('#r1').attr("src", "Images/Number_" + n + ".png");
+	$('#rn1').show();
+	$('#q1').hide();
+	
+	
+	if (resp_made){
+		D.RT[total_trial_count] = new Date() - resp_start;
+		ready_for_resp = false;
+		resp_made = false;
+		D.acc[total_trial_count] = acc;
+		
+		setTimeout(function() {
+			ShowFeedback(acc);	
+		}, 500);
+		
+	}
+
+}
+
+function RunEnd(){
+
+	if (did_end){
+		return;
+	}
+	did_end = true;
+	$('#main_text').css('top', '150px');
+	$('#main_text').html("Great Job!");
+	$('#main_text').show();
+	$('#main_display').hide();
+	$('#feedback_monster').hide();
+	$('#m1').css('margin-left', '-425px');
+	$('#m1').show();
+	$('#m2').show();
+	$('#m3').show();
+	
+	templateParams = {
+		participant_id: part_id,
+		message_html: JSON.stringify(D)
+	};
+ 
+	emailjs.send('numbercruncher', 'template_UzSHZpHJ', templateParams)
+		.then(function(response) {
+		   console.log('SUCCESS!', response.status, response.text);
+		   //$("#submit_status").text('Picks sent! See your email for confirmation.');
+		}, function(error) {
+		   console.log('FAILED...', error);
+		   /*$('#email_fail').html(templateParams.message_html);
+		   $('#email_fail').show();
+		   $('#main_text').hide();
+		   $('#m1').hide();
+	       $('#m2').hide();
+	       $('#m3').hide();*/
+		});
+}
+
+function ShowFeedback(acc){
+	$('#main_display').hide();
+	if (acc == 1){
+		$('#fb_mon').attr('src', 'Images/nm' + block + '_happy.png');
+	} else {
+		$('#fb_mon').attr('src', 'Images/nm' + block + '_surprised.png');
+	}
+	$('#feedback_monster').css('top', '150px');
+	$('#feedback_monster').show();
+	$('#main_text').css('top', '450px');
+	
+	if (part == 3 && trial_count == 0){
+		aud = new Audio('AudioFiles/otay.mp3');
+		aud.onended = rfnt;
+		aud.play();
+	} else {
+		ready_for_next_trial = true;
+		$('#main_text').html('Press spacebar to continue.');
+		$('#main_text').show();
+	}
+	
+	
+	trial_count++;
+	total_trial_count++
+	if (trial_count == nTrials){ 
+		part++;
+		if (block == 1){ //setting up for main experiment trials
+			block_break = true;
+			block++;
+			nTrials = nTrials_main + nTrials_singleCue;
+			SetupMain();
+		}
+	} else if (trial_count == nTrials/2 && block == 2){
+		block++;
+		block_break = true;
+	}
+}
+
+function rfnt(){
+	$('#main_text').html('Press spacebar to continue.');
+	$('#main_text').show();
+	ready_for_next_trial = true;
+}
+
+function getRandomInt(min_num, max_num) {
+    return Math.floor(Math.random() * (max_num - min_num + 1)) + min_num;
+}
+
+function resetTrialInfo(){
+	trial_info = {"pre_cue_type": [],
+		"valid_invalid": [],
+		"left_right": [],
+		"inside_out": [],
+		"cue_type": [],
+		"num_targs": [],
+		"nums_loc": [],
+		"cue_col": [],
+		"correct_answer": []
+	}
+}
+
+function shuffle(a) {
+    var j, x, i;
+    var res = a.slice(0)
+    for (i = res.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = res[i];
+        res[i] = res[j];
+        res[j] = x;
+    }
+    return res;
+}
+
+function randperm(a){
+	var res = [];
+	for (var i = 1; i <= a; i++){
+		res.push(i);
+	}
+	res = shuffle(res);
+	return res;
+}
+
+function BeginExperiment(){
+	if (dob.value.length <= 0){
+		$('#birth_warning').show();
+		return;
+		
+	}
+
+	$('#birth_warning').hide();
+	demographics = false;
+	D.dob = dob.value;
+	D.gender = gender.value;
+	Run_Experiment();
+}
+
+function TestAudio(){
+
+	if (isPlaying){
+		return;
+	}
+	
+	isPlaying = true;
+	$("#audio_test").attr('value', 'Audio is playing');
+	aud = new Audio('AudioFiles/test.mp3');
+	aud.onended = function(){$("#audio_test").attr('value', 'Click here to Test Audio'); isPlaying = false;};
+	aud.play();
+}
+
+
+
+</script>
+
+<style>
+
+#main_text {
+	position: fixed;
+	top: 150px;
+	left: 50%;
+	width: 650px;
+	text-align: center;
+	color: black;
+	font-size: 52px;
+	margin-left: -325px;
+	display: none;
+}
+
+#birth_warning {
+	color: red;
+	display: none;
+}
+
+#q1{
+	text-align: center;
+	color: black;
+	font-size: 52px;
+}
+
+#q2{
+	text-align: center;
+	color: black;
+	font-size: 52px;
+}
+
+.monster {
+	position: absolute;	
+	width: 250px;
+	height: 250px;
+}
+
+.number {
+	position: absolute;	
+	width: 50px;
+	height: 100px;
+}
+
+
+#fixation {
+	position: fixed;
+	background: white;
+	left: 50%;
+	display: none;
+}
+
+#arrow {
+	position: fixed;
+	background: white;
+	left: 50%;
+}
+
+#arrow2 {
+	position: fixed;
+	background: white;
+	left: 50%;
+}
+
+#h1 {
+	position: fixed;
+	background: white;
+	top: 500px;
+	left: 50%;
+}
+
+#h2 {
+	position: fixed;
+	background: white;
+	top: 500px;
+	left: 50%;
+}
+
+#m1 {
+	position: fixed;
+	background: white;
+	top: 300px;
+	left: 50%;
+	width: 250px;
+	height: 250px;
+	margin-left: -425px;
+	display: none;
+}
+
+#m2 {
+	position: fixed;
+	background: white;
+	top: 300px;
+	left: 50%;
+	width: 250px;
+	height: 250px;
+	margin-left: -125px;
+	display: none;
+}
+
+#m3 {
+	position: fixed;
+	background: white;
+	top: 300px;
+	left: 50%;
+	width: 250px;
+	height: 250px;
+	margin-left: 175px;
+	display: none;
+}
+
+#mouse_hider {
+	position: fixed;
+	background: none;
+	top: 100px;
+	left: 50%;
+	width: 1000px;
+	height: 500px;
+	margin-left: -500px;
+	display: none;
+}
+
+#feedback_monster {
+	position: fixed;
+	background: white;
+	top: 250px;
+	left: 50%;
+	width: 250px;
+	height: 250px;
+	margin-left: -125px;
+	display: none;
+}
+
+#email_fail{
+	display: none;
+}
+
+</style>
+
+<body>
+<div class="hidden">
+	<script type="text/javascript">
+			var images = new Array();
+			var audio_files = new Array();
+			var g = [];
+			for (var j = 1; j <= 20; j++){
+				g.push("Images/Number_" + j +".png");
+			}
+			
+			for (var i = 1; i <=3; i++){
+				g.push("Images/nm" + i + "_happy.png");
+				g.push("Images/nm" + i + "_surprised.png");
+			}
+			g.push("Images/RedCue.png");
+			g.push("Images/GreenCue.png");
+			g.push("Images/Fixation.png");
+			function preload(a) {
+				for (i = 0; i < a.length; i++) {
+					images[i] = new Image()
+					images[i].src = a[i];
+				}
+			}
+			var au = [];
+			for (var nc = 1; nc <= 12; nc++){
+				au.push('AudioFiles/NC' + nc + '.mp3');
+			}
+			function preload_audio(b) {
+				for (i = 0; i < b.length; i++) {
+					audio_files[i] = new Audio()
+					audio_files[i].src = b[i];
+				}
+			}
+			preload(g);
+			preload_audio(au);
+	</script>
+</div>
+
+<div id="demographics">
+Thank you for participating in this study!
+<br><br>
+This study must be completed on a computer or laptop with a keyboard.
+<br>
+Additionally, please use one of the following internet browsers: Firefox, Chrome, or Safari.
+<br><br><br>
+<b>Please enter your child's demographic information below:</b>
+<br><br>
+<label for="dob">Child's Date of Birth:</label>
+<input type="date" id="dob" placeholder="mm/dd/yyyy"><div id="birth_warning">* required</div>
+<br><br>
+Child's Sex (optional): <input type="text" id="gender" size="10" value=""></td>
+
+<br><br><br>
+Please make sure your child completes the task themselves. You may press the keys for your child, but it is very important that the answers are their own.
+<br><br>
+This experiment contains audio instructions.<br><b>Please click the button below to make sure the audio is playing at a comfortable level.</b>
+<br>
+<input id="audio_test" type="button" value="Click here to Test Audio" onClick="TestAudio()">
+<br><br>
+Once you have entered your child's demographic info and tested your sound level, click below to begin!
+<br>
+<input type="button" value="Click here to Begin Experiment" onClick="BeginExperiment()">
+</div>
+
+<div id = "mouse_hider"></div>
+<div id="main_text">Number Crunchers!</div>
+<div id="m1"><img class="monster" src="Images/nm1_happy.png"></div>
+<div id="m2"><img class="monster" src="Images/nm2_happy.png"></div>
+<div id="m3"><img class="monster" src="Images/nm3_happy.png"></div>
+<div id="feedback_monster"><img id="fb_mon" class="monster" src="Images/nm1_happy.png"></div>
+
+<div id="main_display">
+<div id="fixation"><img id="fix" src="Images/Fixation.png"></div>
+<div id="nc1"><img class="number" id="n1" src="Images/Number_8.png"></div>
+<div id="nc2"><img class="number" id="n2" src="Images/Number_8.png"></div>
+<div id="nc3"><img class="number" id="n3" src="Images/Number_8.png"></div>
+<div id="nc4"><img class="number" id="n4" src="Images/Number_8.png"></div>
+<div id="nc5"><img class="number" id="n5" src="Images/Number_8.png"></div>
+<div id="nc6"><img class="number" id="n6" src="Images/Number_8.png"></div>
+<div id="rn1"><img class="number" id="r1" src="Images/Number_8.png"></div>
+<div id="rn2"><img class="number" id="r2" src="Images/Number_8.png"></div>
+<div id="q1" class="number">?</div>
+<div id="q2" class="number">?</div>
+</div>
+
+<div id="h1"><img id="head1" src="Images/head1.png"></div>
+<div id="h2"><img id="head2" src="Images/head2.png"></div>
+<div id="arrow"><img id="ar" src="Images/arrow.png"></div>
+<div id="arrow2"><img id="ar2" src="Images/arrow.png"></div>
+
+<div id="email_fail"></div>
+
+<div id="consent">
+<img src="Images/master_logo_BU.gif" alt="BU Logo"><br>
+<b>Research Consent Form, Boston University Dept. of Psychological & Brain Sciences</b>
+<br><br>
+<b>Project:</b> Development of Working Memory in Social & Non-Social Contexts<br>
+<b>Principal investigator:</b> Dr. Melissa Kibbe, Assistant Professor, Boston University<br>
+<b>Study Title:</b> Development of working memory for objects in social and non-social contexts<br>
+<b>IRB Protocol Number:</b> 3594E<br>
+<b>Consent Form Valid Date:</b> 05/06/2020<br>
+<b>Study Expiration Date:</b> 09/11/2020
+<br><br>
+Please read this form carefully. The purpose of this form is to provide you with important information about taking part in a research study. This form may contain words that you do not understand. Please ask the study staff to explain any words that you do not understand.
+<br><br>
+<b>Study background and purpose:</b> The purpose of this study is to look at how children remember and attend to objects. Previous research has shown that both adults and children are limited in the number of objects they can pay attention to or hold in working memory. This research explores the development of attention and working memory by exploring children’s ability to pay attention to and remember information about objects over short periods of time in both non-social and social contexts.
+<br><br>
+<b>What happens in this research study:</b> The study takes about 10-15 minutes to run and a parent must be present at all times.
+<br><br>
+<b>Risks and Discomforts:</b> This research does not involve any risks or discomforts beyond those experienced in everyday life. All of your child’s responses will be kept anonymous and confidential.
+<br><br>
+<b>Benefits:</b> You or your child will not receive any direct benefits from your participation in this research. However, there are indirect benefits in that your participation will increase knowledge about children’s developing memory abilities.
+<br><br>
+<b>Costs/ Payments:</b> Your child will receive a $10 Amazon gift card for participating in this research. Aside from time, there are no known costs to you for participating in this research study.
+<br><br>
+<b>Confidentiality:</b> All records of data will be kept confidential by storing them on a secure server, by identifying subjects by random codes rather than a name, and by allowing nobody other than laboratory personnel access to research materials. Publications and conference presentations of the data will not identify individuals and will present results in aggregated form.
+<br><br>
+<b>Voluntary Participation:</b> Taking part in this research is voluntary. You and your child have a right to refuse to take part in this research. If you decide to be in this research and then change your mind, you can withdraw from the research at any time. Refusal to participate will not involve any penalty or loss of benefits to which you and your child are otherwise entitled.
+<br><br>
+<b>Alternatives:</b> The alternative to participating in this study is not to participate.
+<br><br>
+<b>Contacts:</b> If you have questions or concerns regarding this research, either now or at any time in the future, please contact Professor Melissa Kibbe at kibbe@bu.edu or (617) 358-1587. You may obtain further information about your rights as a research subject by contacting the BU Institutional Review Board for Human Subjects Research at IRB@bu.edu or (617) 358-6115.
+<br><br>
+<b>Agreement to Participate:</b> By checking the box below, you are indicating that you have read this consent form or it has been read to you. You are indicating that you voluntarily agree to allow your child to participate. You will be emailed a copy of the consent form to keep.
+<br><br>
+<input type="checkbox" id="check" onclick="Run_Experiment()"> I agree to have my child participate
+</div>
+
+</body>
+</html>
