@@ -382,7 +382,6 @@ function ShowMasks(){
 }
 
 function ShowPreCue(wn){
-	console.log(wn);
 	for (var n=0; n<wn.length; n++){
 		$('#n'+wn[n]).attr("src", "Images/RedCue.png");
 	}
@@ -685,8 +684,15 @@ function RunTrial(block){
 	ShowMasks();
 		
 	//pre cue
+	if (trial_info.pre_cue_type[trial_count] == 1 & trial_info.cue_type[trial_count] == 2){
+		var wn = [2, 4];
+	} else if (trial_info.pre_cue_type[trial_count] == 2 & trial_info.cue_type[trial_count] == 2){
+		var wn = [3, 5];
+	} else if (trial_info.cue_type[trial_count] == 1){
+		var wn = trial_info.cue_col[trial_count];
+	}
 	setTimeout(function() {
-		ShowPreCue(trial_info.nums_loc[trial_count]);
+		ShowPreCue(wn);
 	}, pre_mask_time);
 	
 	//numbers
