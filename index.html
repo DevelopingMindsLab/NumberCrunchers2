@@ -17,6 +17,7 @@
 
 <script>
 
+var active = true;
 var isPlaying = false;
 var skip_demo = false;
 var part = [];
@@ -161,13 +162,19 @@ $(document).ready(function() {
 		$('#q' + q).css('left', '50%');
 	}
 	
-	if (!skip_demo){
-		part = -2;
+	if (active){
+		if (!skip_demo){
+			part = -2;
+		} else {
+			part = 3;
+			ReadyToBegin();
+			SetupPractice();
+			ready_for_next_trial = true;
+		}
 	} else {
-		part = 3;
-		ReadyToBegin();
-		SetupPractice();
-		ready_for_next_trial = true;
+		$('#consent').hide();
+		$('#main_text').html("This experiment is no longer active.<br><br>Thank you for your interest in participating!");
+		$('#main_text').show();
 	}
 });
 
